@@ -52,7 +52,7 @@ Compile the interpreter with maven.
 mvn clean package
 ```
 
-Create a directory warp10 in interpreter.
+Create a directory warp10 in folder interpreter.
 
 Then copy the Jar with dependencies inside.
 
