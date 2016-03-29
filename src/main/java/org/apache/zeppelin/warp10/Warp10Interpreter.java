@@ -82,8 +82,7 @@ public class Warp10Interpreter extends Interpreter
 
   static {
     Interpreter.register("warpscript", Warp10Interpreter.class.getName());
-    new InterpreterPropertyBuilder().add(URL_KEY, 
-	DEFAULT_URL, "The URL for Warp10.");
+    new InterpreterPropertyBuilder().add(URL_KEY, DEFAULT_URL, "The URL for Warp10.");
   }
 
   @Override
@@ -122,7 +121,6 @@ public class Warp10Interpreter extends Interpreter
   // To ensure a Map on top of the stack the Warpscipt function EXPORT can be used
   // When using Angular to save variable NaN and Infinity are transformed in String !
   //
-  //TODO add something to deactivate the SAVE
   public InterpreterResult interpret(String body, InterpreterContext context) {
 
     //
@@ -137,36 +135,24 @@ public class Warp10Interpreter extends Interpreter
 
     String toSend = "";
     String bodyLine[] = body.split("\n");
-    if(bodyLine.length >= 1) {
+    if ( bodyLine.length >= 1 ) {
 
-      /*
-      if (bodyLine[0].startsWith("//remove")) {
-	//registry.removeAll(context.getNoteId(), null);
-	String[] varToClear = bodyLine[0].split("\\s+"); 
-	for (String variable : varToClear) {
-	  resources.remove(variable);
-	}
-      }
-      else */
-
-      if (bodyLine[0].startsWith("//import"))
+      if ( bodyLine[0].startsWith("//import") )
       {
-	String[] varToImport = bodyLine[0].split("\\s+"); 
+        String[] varToImport = bodyLine[0].split("\\s+"); 
 
-	//
-	// In this case load all variable contained in this line and add store them in Warpscript
-	// 
+        //
+        // In this case load all variable contained in this line and add store them in Warpscript
+        // 
 
-	for (String variable : varToImport) {
-	  System.out.println(variable);
-	  Resource resource = resources.get(variable);
-	  if (resource != null) {
-	    Object value = resources.get(variable).get();
-	    String warpscript = parseObjectToString(value) + " '" + variable + "' " + "STORE ";
-	    toSend += warpscript + "\n";
-	    System.out.println(warpscript);
-	  }
-	}
+        for (String variable : varToImport) {
+          Resource resource = resources.get(variable);
+          if (resource != null) {
+            Object value = resources.get(variable).get();
+            String warpscript = parseObjectToString(value) + " '" + variable + "' " + "STORE ";
+            toSend += warpscript + "\n";
+          }
+        }
       }
     }
 
@@ -178,7 +164,8 @@ public class Warp10Interpreter extends Interpreter
     try {
 
       // 
-      // Execute the request on Warpscipt if 200 then first equals SUCCESS else ERROR, second equals message body
+      // Execute the request on Warpscipt if 200 then first equals SUCCESS else ERROR, 
+      // second equals message body
       //
 
       Pair<InterpreterResult.Code, String> pairResult = this.execRequest(toSend);
@@ -187,29 +174,29 @@ public class Warp10Interpreter extends Interpreter
       //
       // If request is a Success, and first element of the result a Json Map
       //
-      if(pairResult.first == InterpreterResult.Code.SUCCESS) {
-	JSONArray result = new JSONArray(pairResult.second);
-	if (result.length() >= 1) {
-	  String firstItem = result.get(0).toString();
-	  if (isMapJSONValid(firstItem)) {
-	    JSONObject object = new JSONObject(firstItem);
-	    Set<String> keys = object.keySet();
+      if (pairResult.first == InterpreterResult.Code.SUCCESS) {
+        JSONArray result = new JSONArray(pairResult.second);
+        if (result.length() >= 1) {
+          String firstItem = result.get(0).toString();
+          if (isMapJSONValid(firstItem)) {
+            JSONObject object = new JSONObject(firstItem);
+            Set<String> keys = object.keySet();
 
-	    //
-	    // Add all key value of this map in the Context resource pool
-	    // If the object are serializable, then they are shared with all interpreters
-	    //
+            //
+            // Add all key value of this map in the Context resource pool
+            // If the object are serializable, then they are shared with all interpreters
+            //
 
-	    for (String key : keys) {
-	      if (null != parseObject(object.get(key))) {
-		context.getResourcePool().put(key, parseObject(object.get(key)));
-	      } else {
-		context.getResourcePool().remove(key);
-	      }
-	    }
-	  }
-	}
-	//JSONArray arr = getJSONArray(pairResult.second);
+            for (String key : keys) {
+              if (null != parseObject(object.get(key))) {
+                context.getResourcePool().put(key, parseObject(object.get(key)));
+              } else {
+                context.getResourcePool().remove(key);
+              }
+            }
+          }
+        }
+        //JSONArray arr = getJSONArray(pairResult.second);
       }   
       //context.get().
 
@@ -227,14 +214,14 @@ public class Warp10Interpreter extends Interpreter
   }
 
   private String parseObjectToString(Object object) {
-    if( object instanceof Number ) {
+    if ( object instanceof Number ) {
       return object.toString();
     } else if ( object instanceof String ) {
       return "'" + object.toString() + "'";
     } else if (object instanceof List) {
       JSONArray array = new JSONArray(object);
       return "'" + array.toString() + "'" + " JSON->";
-    }else if (object instanceof Map) {
+    } else if (object instanceof Map) {
       JSONObject map = new JSONObject(object);
       return "'" + map.toString() + "'" + " JSON->";
     }
@@ -246,7 +233,7 @@ public class Warp10Interpreter extends Interpreter
       ArrayList<Object> thisList = new ArrayList<>();
       JSONArray listObjects = new JSONArray(object.toString());
       for (Object currentElem : listObjects) {
-	thisList.add(parseObject(currentElem));
+        thisList.add(parseObject(currentElem));
       }
       //parseType.put(object.toString(), "List");
       return thisList;
@@ -254,7 +241,7 @@ public class Warp10Interpreter extends Interpreter
       Map<Object, Object> map = new HashMap<>();
       JSONObject mapObjects = new JSONObject(object.toString());
       for (String element : mapObjects.keySet()) {
-	map.put(element, parseObject(mapObjects.get(element)));
+        map.put(element, parseObject(mapObjects.get(element)));
       }
       //parseType.put(object.toString(), "Map");
       return map;
@@ -354,39 +341,42 @@ public class Warp10Interpreter extends Interpreter
 
     if (200 == con.getResponseCode()) {
       BufferedReader in = new BufferedReader(
-	  new InputStreamReader(con.getInputStream()));
+          new InputStreamReader(con.getInputStream()));
       String inputLine;
 
       while ((inputLine = in.readLine()) != null) {
-	response.append(inputLine);
+        response.append(inputLine);
       }
-      resultPair = new Pair<InterpreterResult.Code, String>(InterpreterResult.Code.SUCCESS, response.toString());
+      resultPair = new Pair<InterpreterResult.Code, String>(InterpreterResult.Code.SUCCESS, 
+          response.toString());
       in.close();
       con.disconnect();
     } else {
       String errorLine = "\"Error-Line\":" + con.getHeaderField("X-Warp10-Error-Line");
-      String errorMsg = "\"Error-Message\":\"" + con.getHeaderField("X-Warp10-Error-Message")+ "\"";
+      String errorMsg = "\"Error-Message\":\"" 
+                          + con.getHeaderField("X-Warp10-Error-Message") + "\"";
       response.append("[{");
       response.append(errorLine + ",");
       response.append(errorMsg);
       boolean getBody = (null == con.getContentType());
-      if(!getBody && ! con.getContentType().startsWith("text/html")) {
-	getBody = true;
+      if (!getBody && !con.getContentType().startsWith("text/html")) {
+        getBody = true;
       }
       if (getBody) {
-	response.append(",\"Body\":\"");
-	BufferedReader in = new BufferedReader(
-	    new InputStreamReader(con.getErrorStream()));
-	String inputLine;
+        response.append(",\"Body\":\"");
+        BufferedReader in = new BufferedReader(
+            new InputStreamReader(con.getErrorStream()));
+        String inputLine;
 
-	while ((inputLine = in.readLine()) != null) {
-	  response.append(inputLine);
-	}
-	in.close();
-	response.append("\"");
+        while ((inputLine = in.readLine()) != null) {
+          response.append(inputLine);
+        }
+        in.close();
+        response.append("\"");
       }
       response.append("}]");
-      resultPair = new Pair<InterpreterResult.Code, String>(InterpreterResult.Code.ERROR, response.toString());
+      resultPair = new Pair<InterpreterResult.Code, String>(InterpreterResult.Code.ERROR, 
+          response.toString());
       con.disconnect();
     }
 
