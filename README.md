@@ -34,7 +34,7 @@ z.put("spark", "test")
 
 ## Use EXPORT
 The EXPORT function available in Warpscript assure a Map as first element in top of stack.
-Define here a list of variable and their last instances will be saved.
+Define here a list of variable and the last value of those variables will be saved.
 
 With the following example both key 'sample' and 'spark' will be inside a Map on top of the Warp10 stack and will be saved in resource pool.
 ```
