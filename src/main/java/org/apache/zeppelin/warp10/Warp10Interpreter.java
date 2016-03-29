@@ -23,7 +23,10 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -35,8 +38,13 @@ import org.apache.zeppelin.display.AngularObject;
 import org.apache.zeppelin.display.AngularObjectRegistry;
 import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.interpreter.InterpreterContext;
+import org.apache.zeppelin.interpreter.InterpreterGroup;
 import org.apache.zeppelin.interpreter.InterpreterPropertyBuilder;
 import org.apache.zeppelin.interpreter.InterpreterResult;
+import org.apache.zeppelin.interpreter.WrappedInterpreter;
+import org.apache.zeppelin.resource.Resource;
+import org.apache.zeppelin.resource.ResourcePool;
+import org.apache.zeppelin.resource.ResourceSet;
 /**
  * Interpreter Warp10 for Zeppelin
  * 
@@ -69,6 +77,7 @@ public class Warp10Interpreter extends Interpreter
     super(property);
     //
     propertiesMap = new HashMap<>();
+    //property.
   }
 
   public HashMap<String, Properties> getPropertiesMap() {
@@ -121,17 +130,11 @@ public class Warp10Interpreter extends Interpreter
   public InterpreterResult interpret(String body, InterpreterContext context) {
 
     //
-    // Load the Angular Registry to load all globals variable already defined
-    // Create a Map associating their name with their value
+    // Store the resource pool already defined in context
     //
     
-    AngularObjectRegistry registry = context.getAngularObjectRegistry();
-    List<AngularObject> liAngularObjects = registry.getAllWithGlobal(context.getNoteId());
-    Map<String, Object> mapAngularObjects = new HashMap<>();
-    for (AngularObject angularObject : liAngularObjects) {
-      mapAngularObjects.put(angularObject.getName(),angularObject.get());
-    }
-    
+    ResourcePool resources = context.getResourcePool();
+
     //
     // Initialize an empty String and check if the first body line contains //import
     //
@@ -139,6 +142,17 @@ public class Warp10Interpreter extends Interpreter
     String toSend = "";
     String bodyLine[] = body.split("\n");
     if(bodyLine.length >= 1) {
+      
+      /*
+      if (bodyLine[0].startsWith("//remove")) {
+	//registry.removeAll(context.getNoteId(), null);
+	String[] varToClear = bodyLine[0].split("\\s+"); 
+	for (String variable : varToClear) {
+	  resources.remove(variable);
+	}
+      }
+      else */
+      
       if (bodyLine[0].startsWith("//import"))
       {
 	String[] varToImport = bodyLine[0].split("\\s+"); 
@@ -148,17 +162,20 @@ public class Warp10Interpreter extends Interpreter
 	// 
 	
 	for (String variable : varToImport) {
-	  if(mapAngularObjects.containsKey(variable)){
-	    String value = getVariable(mapAngularObjects.get(variable));
-	    String warpscript = value + "'" + variable + "' " + "STORE ";
-	    toSend += warpscript + "\n";
-	  }
+	  System.out.println(variable);
+	  Resource resource = resources.get(variable);
+	    if (resource != null) {
+	      Object value = resources.get(variable).get();
+	      String warpscript = parseObjectToString(value) + " '" + variable + "' " + "STORE ";
+	      toSend += warpscript + "\n";
+	      System.out.println(warpscript);
+	    }
 	}
       }
     }
     
     //
-    // Append wrpscript header with body
+    // Append warpscript header with body
     //
     
     toSend += body;
@@ -183,23 +200,25 @@ public class Warp10Interpreter extends Interpreter
 	    Set<String> keys = object.keySet();
 	    
 	    //
-	    // Add all key value of this map in the angular registry
+	    // Add all key value of this map in the Context resource pool
+	    // If the object are serializable, then they are shared with all interpreters
 	    //
 	    
 	    for (String key : keys) {
-	      
-	      registry.add(key, object.get(key), context.getNoteId(), null);
+	      if (null != parseObject(object.get(key))) {
+		context.getResourcePool().put(key, parseObject(object.get(key)));
+	      } else {
+		context.getResourcePool().remove(key);
 	      }
+	    }
 	  }
 	}
 	//JSONArray arr = getJSONArray(pairResult.second);
       }   
+      //context.get().
       
-      //
-      // Return the expected result
-      //
-      
-      return new InterpreterResult(pairResult.first, pairResult.second);
+      //angularObjects.put(intpGroup.getId(), registry.getAllWithGlobal(id));
+      return new InterpreterResult(pairResult.first, pairResult.second + "\n");
     } catch (Exception e) {
       
       //
@@ -209,6 +228,60 @@ public class Warp10Interpreter extends Interpreter
       return new InterpreterResult(InterpreterResult.Code.ERROR, e.getMessage());
     }
     //return this.current_Url;
+  }
+  
+  private String parseObjectToString(Object object) {
+    if( object instanceof Number ) {
+      return object.toString();
+    } else if ( object instanceof String ) {
+      return "'" + object.toString() + "'";
+    } else if (object instanceof List) {
+      JSONArray array = new JSONArray(object);
+      return "'" + array.toString() + "'" + " JSON->";
+    }else if (object instanceof Map) {
+      JSONObject map = new JSONObject(object);
+      return "'" + map.toString() + "'" + " JSON->";
+    }
+    return "";
+  }
+  
+  private Object parseObject(Object object) {
+    if (isListJSONValid(object.toString())) {
+      ArrayList<Object> thisList = new ArrayList<>();
+      JSONArray listObjects = new JSONArray(object.toString());
+      for (Object currentElem : listObjects) {
+  thisList.add(parseObject(currentElem));
+      }
+      //parseType.put(object.toString(), "List");
+      return thisList;
+    } else if (isMapJSONValid(object.toString())) {
+      Map<Object, Object> map = new HashMap<>();
+      JSONObject mapObjects = new JSONObject(object.toString());
+      for (String element : mapObjects.keySet()) {
+  map.put(element, parseObject(mapObjects.get(element)));
+      }
+      //parseType.put(object.toString(), "Map");
+      return map;
+    } else {
+      //parseType.put(object.toString(), object.getClass().toString());
+      return object;
+    }
+  }
+
+  private ArrayList<String> parseSetting(JSONArray bodyJson) {
+    ArrayList<String> retunList = new ArrayList<>();
+    for (Object object : bodyJson) {
+      JSONObject json = new JSONObject(object.toString());
+      JSONArray interpreterGroup = json.getJSONArray("interpreterGroup");
+      for (Object obj : interpreterGroup) {
+	JSONObject json2 = new JSONObject(object.toString());
+	if(json2.has("class")) {
+	  String res = json2.getString("class");
+	  retunList.add(res);
+	}
+      }
+    }
+    return retunList;
   }
 
   private String getVariable(Object object) {
@@ -373,4 +446,19 @@ public class Warp10Interpreter extends Interpreter
     
     return resultPair;
   }
+  
+  
+  public static String getHTML(String urlToRead) throws Exception {
+    StringBuilder result = new StringBuilder();
+    URL url = new URL(urlToRead);
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("GET");
+    BufferedReader rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+    String line;
+    while ((line = rd.readLine()) != null) {
+       result.append(line);
+    }
+    rd.close();
+    return result.toString();
+}
 }
