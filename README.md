@@ -46,14 +46,14 @@ With the following example both key 'sample' and 'spark' will be inside a Map on
 
 ## Set-up 
 
-Compile the interpreter with maven
+Compile the interpreter with maven.
 
 ```
 mvn clean package
 ```
 
-Create a directory warp10 in interpreters
+Create a directory warp10 in interpreter.
 
-Then copy the Jar with dependencies inside
+Then copy the Jar with dependencies inside.
 
-Stop and restart zeppelin
+Stop and restart Zeppelin.
