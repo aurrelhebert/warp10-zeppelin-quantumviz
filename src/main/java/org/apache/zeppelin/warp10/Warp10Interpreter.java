@@ -149,7 +149,7 @@ public class Warp10Interpreter extends Interpreter
           Resource resource = resources.get(variable);
           if (resource != null) {
             Object value = resources.get(variable).get();
-            String warpscript = parseObjectToString(value, false, false) + " '" + variable + "' " + "STORE ";
+            String warpscript = parseObjectToString(value) + " '" + variable + "' " + "STORE ";
             toSend += warpscript + "\n";
           }
         }
@@ -213,18 +213,12 @@ public class Warp10Interpreter extends Interpreter
     //return this.current_Url;
   }
 
-  private String parseObjectToString(Object object, Boolean isInList, Boolean isMapKey) {
-    if(isMapKey) {
-      return "\"" + object.toString() + "\":";
-    }
+  private String parseObjectToString(Object object) {
+    
     if ( object instanceof Number ) {
       return object.toString();
     } else if ( object instanceof String ) {
-      if (isInList) {
-        return "\"" + object.toString() + "\"";
-      } else {
-        return "'" + object.toString() + "'";
-      }
+      return "'" + object.toString() + "'";
     } else if (object instanceof List) {
       JSONArray array = new JSONArray();
 
