@@ -149,7 +149,7 @@ public class Warp10Interpreter extends Interpreter
           Resource resource = resources.get(variable);
           if (resource != null) {
             Object value = resources.get(variable).get();
-            String warpscript = parseObjectToString(value) + " '" + variable + "' " + "STORE ";
+            String warpscript = parseObjectToString(value, false, false) + " '" + variable + "' " + "STORE ";
             toSend += warpscript + "\n";
           }
         }
@@ -213,17 +213,33 @@ public class Warp10Interpreter extends Interpreter
     //return this.current_Url;
   }
 
-  private String parseObjectToString(Object object) {
+  private String parseObjectToString(Object object, Boolean isInList, Boolean isMapKey) {
+    if(isMapKey) {
+      return "\"" + object.toString() + "\":";
+    }
     if ( object instanceof Number ) {
       return object.toString();
     } else if ( object instanceof String ) {
-      return "'" + object.toString() + "'";
+      if (isInList) {
+        return "\"" + object.toString() + "\"";
+      } else {
+        return "'" + object.toString() + "'";
+      }
     } else if (object instanceof List) {
-      JSONArray array = new JSONArray(object);
-      return "'" + array.toString() + "'" + " JSON->";
+      JSONArray array = new JSONArray();
+
+      for (Object element : (List) object) {
+        array.put(element);
+      }
+      return "'" + array.toString() + "' JSON->";
     } else if (object instanceof Map) {
-      JSONObject map = new JSONObject(object);
-      return "'" + map.toString() + "'" + " JSON->";
+      JSONObject map = new JSONObject();
+      Map mapObj = (Map) object;
+      for (Object key : mapObj.keySet()) {
+        map.put(key.toString(), mapObj.get(key));
+      }
+      
+      return "'" + map.toString() + "' JSON->";
     }
     return "";
   }
