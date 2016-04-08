@@ -8,9 +8,9 @@
     <version>0.6.0-incubating-SNAPSHOT</version>
   </parent>
   <groupId>org.apache.zeppelin</groupId>
-  <artifactId>zeppelin-warp10</artifactId>
+  <artifactId>zeppelin-quantumviz</artifactId>
   <version>0.6.0-incubating-SNAPSHOT</version>
-  <name>zeppelin-warp10</name>
+  <name>zeppelin-quantumviz</name>
   <url>http://maven.apache.org</url>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
