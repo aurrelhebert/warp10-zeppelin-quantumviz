@@ -1,47 +1,37 @@
-## Interpreter Warp 10
+## Interpreter QuantumViz
 
-This plugin can be used to interpret warpscript instruction. It will send an HTTP post to Warp10 with the current paragraph lines.
-The result provided is a JSON string. 
-To get started configure the Warp10 interpreter, adding the url of the Warp10 backend as parameter.
+This plugin can be used to plot quantumviz graphs or map with geoquantumviz. It use the library defined in quantum url given as parameter. 
+To get started configure the QuantumViz interpreter, adding the url of the Quantum backend as parameter.
 ```
 name:                 value:
-warp10.url           http://localhost:8086/api/v0
+warp10.url           http://localhost:8000/components
 ```
 
-## NaN and INFINITY case
-The JSON library parse NaN and INFINITY as strings.
-
-## Share some data with the others interpreters
-
-Data generated via Warp10 can be communicated to other plugins via the resource pool of the interpreter Context.
-If the first element on top of the result stack in Warp10 is a Map, then all the elements contained in this Map are saved.
-
-To import element in Warp10 add a new line right after '%warpscript'.
-```
-//import var1 var2
-```
-All variables indicated here will then be loaded in Warpscript. 
-To delete elements, in the result map add NULL as value. The key will then be deleted.
-Those elements can then be loaded in an other interpreter (example with Spark).
+## Use
+Just put the parameter in the paragraph quantumviz. One variable per line, will print one graph.
 
 ```
-%spark
-// Use z.get to load a variable name "sample" in resource pool
-val a = z.get("sample")
-//  Use put to add a new variable
-z.put("spark", "test")
+%quantumviz
+dataviz
+data2
 ```
 
-## Use EXPORT
-The EXPORT function available in Warpscript assure a Map as first element in top of stack.
-Define here a list of variable and the last value of those variables will be saved.
-
-With the following example both key 'sample' and 'spark' will be inside a Map on top of the Warp10 stack and will be saved in resource pool.
+To work with quantum data to plot must have the following form : 
 ```
-%warpscript
-// import spark
-[ 'sample' 'spark' ] EXPORT
-'Warpscript' 'sample' STORE
+{
+    'gts'
+    [ 
+        $gts1
+        $gts2
+    ]
+    'params'
+    [
+        { 'key' 'key1' }
+        { 'key' 'key2' 'color' ''#ff1010' }
+    ]
+    'globalParams'
+    { 'interpolate' 'linear' }
+}
 ```
 
 ## Set-up 
@@ -52,7 +42,7 @@ Compile the interpreter with maven.
 mvn clean package
 ```
 
-Create a directory warp10 in folder interpreter.
+Create a directory quantumviz in folder interpreter.
 
 Then copy the Jar with dependencies inside.
 
