@@ -16,7 +16,7 @@ dataviz
 data2
 ```
 
-To work with quantum data to plot must have the following form : 
+To work with quantum, data must be stored in the globale resource scope. In WarpScript, they can be set the following this sample: 
 ```
 {
     'gts'
