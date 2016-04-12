@@ -8,7 +8,7 @@ warp10.url           http://localhost:8000/components
 ```
 
 ## Use
-Just put the parameter in the paragraph quantumviz. One variable per line, will print one graph.
+Just put the parameter in the paragraph quantumviz. One variable per line, multiple line will print multiple graphs.
 
 ```
 %quantumviz
