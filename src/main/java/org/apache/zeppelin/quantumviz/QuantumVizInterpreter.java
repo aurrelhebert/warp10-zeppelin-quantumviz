@@ -118,9 +118,9 @@ public class QuantumVizInterpreter extends Interpreter
 
   //@Override
   //
-  // When the result of the Warpscript contains a Map on top of the stack
+  // When the result of the WarpScript contains a Map on top of the stack
   // then all the tuples key,value are saved in Angular variables.
-  // To ensure a Map on top of the stack the Warpscipt function EXPORT can be used
+  // To ensure a Map on top of the stack the WarpScript function EXPORT can be used
   // When using Angular to save variable NaN and Infinity are transformed in String !
   //
   public InterpreterResult interpret(String body, InterpreterContext context) {
