@@ -36,6 +36,7 @@ import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.apache.zeppelin.interpreter.InterpreterPropertyBuilder;
 import org.apache.zeppelin.interpreter.InterpreterResult;
+import org.apache.zeppelin.interpreter.thrift.InterpreterCompletion;
 import org.apache.zeppelin.resource.Resource;
 import org.apache.zeppelin.resource.ResourcePool;
 import org.json.JSONArray;
@@ -99,7 +100,7 @@ public class QuantumVizInterpreter extends Interpreter
   }
 
   @Override
-  public List<String> completion(String arg0, int arg1) {
+  public List<InterpreterCompletion> completion(String arg0, int arg1) {
     //
     return null;
   }
