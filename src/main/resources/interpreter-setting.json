@@ -1,0 +1,15 @@
+[
+  {
+    "group": "quantumviz",
+    "name": "QuantumViz",
+    "className": "org.apache.zeppelin.quantumviz.QuantumVizInterpreter",
+    "properties": {
+      "warp10.url": {
+        "envName": null,
+        "propertyName": "warp10.url",
+        "defaultValue": "http://localhost:8080/api/v0",
+        "description": "Default url for the Warp 10 backend to call"
+      }
+    }
+  }
+]
