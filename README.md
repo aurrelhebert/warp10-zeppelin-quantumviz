@@ -46,4 +46,13 @@ Create a directory quantumviz in folder interpreter.
 
 Then copy the Jar with dependencies inside.
 
+Add in file conf/zeppelin-site.xml, for the property zeppelin.interpreters, this interpreter: 
+
+```
+<property>
+<name>zeppelin.interpreters</name>
+<value>org.apache.zeppelin.spark.SparkInterpreter,...,org.apache.zeppelin.quantumviz.QuantumVizInterpreter</value>
+</property>
+```
+
 Stop and restart Zeppelin.
