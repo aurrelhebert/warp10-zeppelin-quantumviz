@@ -56,3 +56,15 @@ Add in file conf/zeppelin-site.xml, for the property zeppelin.interpreters, this
 ```
 
 Stop and restart Zeppelin.
+
+## Deploy
+
+To deploy this jar with scp add the follwing property file etc/config/local.properties containing: 
+
+```
+sshUrl=scp://user@my.domain:/path/to
+```
+
+```
+mvn deploy -Drat.skip=true
+```
