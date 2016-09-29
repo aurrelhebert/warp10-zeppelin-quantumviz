@@ -1,10 +1,10 @@
 ## Interpreter QuantumViz
 
 This plugin can be used to plot quantumviz graphs or map with geoquantumviz. It use the library defined in quantum url given as parameter. 
-To get started configure the QuantumViz interpreter, adding the url of the Quantum backend as parameter.
+To get started configure the QuantumViz interpreter, adding the path to Quantum-viz if local or an url to get quantumviz component as parameter.
 ```
 name:                 value:
-warp10.url           http://localhost:8000/components
+warp10.url           Path/to
 ```
 
 ## Use
@@ -59,7 +59,7 @@ Stop and restart Zeppelin.
 
 ## Deploy
 
-To deploy this jar with scp add the follwing property file etc/config/local.properties containing: 
+To deploy, use branch deploy and add this jar with scp add the follwing property file etc/config/local.properties containing: 
 
 ```
 sshUrl=scp://user@my.domain:/path/to

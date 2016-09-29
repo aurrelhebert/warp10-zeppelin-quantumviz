@@ -16,13 +16,6 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-  
-  <distributionManagement>
-	  <repository>
-	    <id>ssh-repository</id>
-      	<url>scp://bigbang.cityzendata.net:/data/repos/ansible-staging/vendors</url>
-	  </repository>
-  </distributionManagement>
 
   <dependencies>
     <dependency>
@@ -31,12 +24,6 @@
       <version>0.6.1</version>
       <scope>provided</scope>
     </dependency> 
-    
-    <dependency>
-	  <groupId>org.apache.maven.wagon</groupId>
-	  <artifactId>wagon-ssh-external</artifactId>
-	  <version>2.10</version>
-	</dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -62,35 +49,8 @@
   </dependencies>
 
   <build>
-     
-	<extensions>
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-        <artifactId>wagon-ssh</artifactId>
-        <version>2.8</version>
-      </extension>
-    </extensions>
     
     <plugins>
-    
-    <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>properties-maven-plugin</artifactId>
-        <version>1.0.0</version>
-        <executions>
-          <execution>
-            <phase>initialize</phase>
-            <goals>
-              <goal>read-project-properties</goal>
-            </goals>
-            <configuration>
-              <files>
-                <file>etc/config/local.properties</file>
-              </files>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
 
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -102,34 +62,6 @@
           </execution>
         </executions>
       </plugin>
-      
-      <plugin>
-      <groupId>org.codehaus.mojo</groupId>
-      <artifactId>wagon-maven-plugin</artifactId>
-      <version>1.0</version>
-      <executions>
-        <execution>
-          <id>upload-javadoc</id>
-          <phase>deploy</phase>
-          <goals>
-            <goal>sshexec</goal>
-          </goals>
-          <configuration>
-            <commands>
-              <command>rm /data/repos/ansible-staging/vendors/org/apache/zeppelin/zeppelin-quantumviz/maven-metadata.xml</command>
-            </commands>
-            <privateKey>/Users/ahebert/Documents/mountFD/id_rsa</privateKey>
-        <filePermissions>664</filePermissions>
-        <directoryPermissions>775</directoryPermissions>
-            <fromDir>local.dir</fromDir>
-            <includes>target/*.jar</includes>
-            <excludes>*.xml</excludes>
-            <url>${sshUrl}</url>
-            <toDir>remote.dir</toDir>
-          </configuration>
-          </execution>
-        </executions>
-        </plugin>
       
      <plugin> <artifactId>maven-assembly-plugin</artifactId> <version>2.6</version> <configuration> <descriptorRefs> <descriptorRef>jar-with-dependencies</descriptorRef> </descriptorRefs> </configuration> <executions> <execution> <id>make-assembly</id> <!-- this is used for inheritance merges --> <phase>package</phase> <!-- bind to the packaging phase --> <goals> <goal>single</goal> </goals> </execution> </executions> </plugin>
     </plugins>
