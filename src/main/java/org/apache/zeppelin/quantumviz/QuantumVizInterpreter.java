@@ -141,7 +141,7 @@ public class QuantumVizInterpreter extends Interpreter
     res.append("<link   rel=\"import\" href=\"" + current_Url 
       + "/polymer/polymer.html\"> ");
     res.append("<link   rel=\"import\" href=\"" + current_Url 
-      + "/warp10-quantumviz/warp10-display-chart.html\"> ");
+      + "/warp10-quantumviz/warp10-display-alt-chart.html\"> ");
     String bodyLines[] = body.split("\n");
     //String areWords = "";
 
