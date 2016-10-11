@@ -27,7 +27,7 @@ To work with quantum, data must be stored in the globale resource scope. In Warp
     'params'
     [
         { 'key' 'key1' }
-        { 'key' 'key2' 'color' ''#ff1010' }
+        { 'key' 'key2' 'color' '#ff1010' }
     ]
     'globalParams'
     { 'interpolate' 'linear' }
