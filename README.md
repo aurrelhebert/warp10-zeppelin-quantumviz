@@ -58,6 +58,8 @@ An other to print a serie is to have a scala object as the variable data2 which 
 
 This [page](https://github.com/aurrelhebert/WarpScript-Sample/blob/master/zeppelin/warpscript-quantumviz.json) contains a valid JSON with stored series in WarpScript and the method to print them with Quantumviz.
 
+## Real example
+
 In this [repository](https://github.com/aurrelhebert/WarpScript-Sample/tree/master/zeppelin) you will find how the Fuel data-set was presented using Zeppelin.
 
 ## Set-up 
