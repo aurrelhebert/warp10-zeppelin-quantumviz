@@ -45,6 +45,21 @@ To work with quantum, data have to be stored previouslys in the globale resource
 }
 ```
 
+This method allow the user to define the parameter he wants to use: for example choosing the key of the serie to print, its color. The user can also chose some globals parameters as the interpolation, if wants to print the series with date or timestamps values, or choose the titles of its differents axis.
+
+An other to print a serie is to have a scala object as the variable data2 which is a simple list of time-serie. Then quantumviz will do its best to print them automatically. 
+
+```
+{
+    'data2'
+    [ $gts1 ]
+}
+```
+
+This [page](https://github.com/aurrelhebert/WarpScript-Sample/blob/master/zeppelin/warpscript-quantumviz.json) contains a valid JSON with stored series in WarpScript and the method to print them with Quantumviz.
+
+In this [repository](https://github.com/aurrelhebert/WarpScript-Sample/tree/master/zeppelin) you will find how the Fuel data-set was presented using Zeppelin.
+
 ## Set-up 
 
 Compile the interpreter with maven.
