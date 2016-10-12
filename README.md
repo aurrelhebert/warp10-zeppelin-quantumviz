@@ -1,14 +1,19 @@
 ## Interpreter QuantumViz
 
-This plugin can be used to plot quantumviz graphs or map with geoquantumviz. It use the library defined in quantum url given as parameter. 
-To get started configure the QuantumViz interpreter, adding the path to Quantum-viz if local or an url to get quantumviz component as parameter.
+This plugin can be used to plot [quantumviz](https://github.com/cityzendata/warp10-quantumviz) graphs in [apache zeppelin](https://zeppelin.apache.org/). It uses the library defined in quantum url given as parameter.
+
+To get started configure the QuantumViz interpreter, adding the path to Quantumviz if local or an url to get quantumviz component as parameter.
+
 ```
 name:                 value:
 warp10.url           Path/to
 ```
 
+This zeppelin interpreter espect scala object that follow the modelisation choosen quantumviz. 
+
 ## Use
-Just put the parameter in the paragraph quantumviz. One variable per line, multiple line will print multiple graphs.
+
+Just put the parameter of the scala object to print in the paragraph quantumviz. One variable per line, multiple line will print multiples graphs.
 
 ```
 %quantumviz
@@ -16,21 +21,27 @@ dataviz
 data2
 ```
 
-To work with quantum, data must be stored in the globale resource scope. In WarpScript, they can be set the following this sample: 
+To work with quantum, data have to be stored previouslys in the globale resource scope. In WarpScript, they corresponds to the following modelisation. To print the scala object dataviz, a new list containing a map including three parameters (gts,params and globalParams).
+
 ```
 {
-    'gts'
-    [ 
-        $gts1
-        $gts2
-    ]
-    'params'
+    'dataviz'
     [
-        { 'key' 'key1' }
-        { 'key' 'key2' 'color' '#ff1010' }
+        {
+            'gts'
+            [ 
+                $gts1
+                $gts2
+            ]
+            'params'
+            [
+                { 'key' 'key1' }
+                { 'key' 'key2' 'color' '#ff1010' }
+            ]
+            'globalParams'
+            { 'interpolate' 'linear' }
+        }
     ]
-    'globalParams'
-    { 'interpolate' 'linear' }
 }
 ```
 
@@ -64,6 +75,8 @@ To deploy, use branch deploy and add this jar with scp add the follwing property
 ```
 sshUrl=scp://user@my.domain:/path/to
 ```
+
+Then run 
 
 ```
 mvn deploy -Drat.skip=true
