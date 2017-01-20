@@ -150,7 +150,7 @@ public class QuantumVizInterpreter extends Interpreter
     for (String line : bodyLines) {
       
       res.append("<div>");
-      res.append("<warp10-display-chart width=\"800\" height=\"600\" ");
+      res.append("<warp10-display-chart style=\"height:600px\" width=\"800\"");
       
       String[] words = line.split("\\s+");
       
