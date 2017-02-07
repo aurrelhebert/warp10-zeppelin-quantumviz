@@ -58,8 +58,10 @@ public class QuantumVizInterpreter extends Interpreter
   private String SETTING_DEFAULT_MAX_WIDTH = "800%";
   
   private String JSON_TYPE_KEY = "type";
-  private String JSON_MAX_HEIGHT_KEY = "max-height";
-  private String JSON_MAX_WIDTH_KEY = "max-width";
+  private String JSON_MAX_HEIGHT_KEY = "default-height";
+  private String JSON_MAX_WIDTH_KEY = "default-width";
+  private String JSON_HEIGHT_KEY = "height";
+  private String JSON_WIDTH_KEY = "width";
   private String JSON_DATA_KEY = "data";
   private String JSON_SERIES_KEY = "series";
   
@@ -188,43 +190,27 @@ public class QuantumVizInterpreter extends Interpreter
     }
     
     //
-    // Check if div max height is set by the user
-    //
-    if (jsObject.has(this.JSON_MAX_HEIGHT_KEY)) {
+    // Check if div default height is set by the user
+    //    
+    try {
+      maxHeight = initializeWidthHeight(this.SETTING_DEFAULT_MAX_HEIGHT, 
+          jsObject, this.JSON_MAX_HEIGHT_KEY);
+    } catch (Exception eWidth){
       
-      //
-      // Verify height string before setting it up
-      //
-      
-      if (isHeightOk(jsObject.getString(this.JSON_MAX_HEIGHT_KEY))) {
-        maxHeight = jsObject.getString(this.JSON_MAX_HEIGHT_KEY);
-      } else {
-        
-        //throw a Zeppelin exception
-        return new InterpreterResult(InterpreterResult.Code.ERROR, 
-            "Quantumviz interpreter expects custom setting height to be "
-            + "a number followed by the string px.");
-      }
+      //return a Zeppelin error
+      return new InterpreterResult(InterpreterResult.Code.ERROR, eWidth.getMessage());
     }
     
     //
-    // Check if div max width is set by the user
+    // Check if div default width is set by the user
     //
-    if (jsObject.has(this.JSON_MAX_WIDTH_KEY)) {
+    try {
+      maxWidth = initializeWidthHeight(this.SETTING_DEFAULT_MAX_WIDTH, 
+          jsObject, this.JSON_MAX_WIDTH_KEY);
+    } catch (Exception eWidth){
       
-      //
-      // Verify width string before setting it up
-      //
-      
-      if (isWidthOk(jsObject.getString(this.JSON_MAX_WIDTH_KEY))) {
-        maxWidth = jsObject.getString(this.JSON_MAX_WIDTH_KEY);
-      } else {
-        
-        //throw a Zeppelin exception
-        return new InterpreterResult(InterpreterResult.Code.ERROR, 
-            "Quantumviz interpreter expects custom setting height to be "
-            + "a number followed by the string px.");
-      }
+      //return a Zeppelin error
+      return new InterpreterResult(InterpreterResult.Code.ERROR, eWidth.getMessage());
     }
     
     //
@@ -328,11 +314,37 @@ public class QuantumVizInterpreter extends Interpreter
       res.append("<div>");
       
       //
+      // Check if user defined an height for current div
+      //
+      String height = maxHeight;
+      
+      try {
+        height = initializeWidthHeight(maxHeight, jsonElement, this.JSON_HEIGHT_KEY);
+      } catch (Exception eWidth){
+        
+        //return a Zeppelin error
+        return new InterpreterResult(InterpreterResult.Code.ERROR, eWidth.getMessage());
+      }
+      
+      //
+      // Check if user defined a width for current div
+      //
+      
+      String width = maxWidth;
+      try {
+        width = initializeWidthHeight(maxWidth, jsonElement, this.JSON_WIDTH_KEY);
+      } catch (Exception eWidth){
+        
+        //return a Zeppelin error
+        return new InterpreterResult(InterpreterResult.Code.ERROR, eWidth.getMessage());
+      }
+      
+      //
       // Set up its style (height and width)
       //
       
-      res.append("<" + display + " style=\"height:" + maxHeight + ";"
-          + "max-width:" + maxWidth + ";\"");
+      res.append("<" + display + " style=\"height:" + height + ";"
+          + "max-width:" + width + ";\"");
       
       //
       // Load resources from Zeppelin if founded
@@ -364,6 +376,66 @@ public class QuantumVizInterpreter extends Interpreter
 
     return new InterpreterResult(InterpreterResult.Code.SUCCESS, res.toString());
 
+  }
+
+  /**
+   * Method to initialize Style variable height and width
+   * 
+   * @param defaultRes default returned result
+   * @param jsonObject jsonObject to look for
+   * @param code_key json key of current style
+   * @return
+   * @throws Exception to return a Zeppelin error
+   */
+  private String initializeWidthHeight(String defaultRes, 
+      JSONObject jsonObject, String code_key) throws Exception {
+    
+    String result = defaultRes;
+    
+    if (jsonObject.has(code_key)) {
+     
+      boolean condition = false;
+      String errorMessage = "Quantumviz interpreter encounters an error "
+          + "when checking an Height or width element";
+      
+      //
+      // In case code key corresponds to an height check, set condition using test on height
+      //
+      
+      if (code_key.equals(this.JSON_HEIGHT_KEY) || code_key.equals(this.JSON_MAX_HEIGHT_KEY)) {
+        condition = isHeightOk(jsonObject.getString(code_key));
+        if (!condition) {
+          errorMessage = "Quantumviz interpreter expects custom setting height to be "
+            + "a number followed by the string px.";
+        }
+      }
+      
+      //
+      // In case code key corresponds to a width check, set condition using test on width
+      //
+      
+      if (code_key.equals(this.JSON_WIDTH_KEY) || code_key.equals(this.JSON_MAX_WIDTH_KEY)) {
+        condition = isWidthOk(jsonObject.getString(code_key));
+        if (!condition) {
+          errorMessage = "Quantumviz interpreter expects custom setting width to be "
+              + "a number followed by the string px or %.";
+        }
+      }
+      
+      //
+      // Set result string from JSON object
+      //
+      
+      if (condition) {
+        result = jsonObject.getString(code_key);
+      } else {
+        
+        //throw an exception
+        throw new Exception(errorMessage);
+      }
+    }
+    
+    return result;
   }
 
   /**
