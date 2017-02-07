@@ -1,5 +1,7 @@
 ## Interpreter QuantumViz
 
+** Quantumviz interpreter is migrating, this documentation is no longer relevant for the master version. Use 0.6.1 branches for stable version. **
+
 This plugin can be used to plot [quantumviz](https://github.com/cityzendata/warp10-quantumviz) graphs in [apache zeppelin](https://zeppelin.apache.org/). It uses the library defined in quantum url given as parameter.
 
 To get started configure the QuantumViz interpreter, adding the path to Quantumviz if local or an url to get quantumviz component as parameter.

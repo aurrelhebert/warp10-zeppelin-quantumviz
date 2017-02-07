@@ -16,7 +16,6 @@
 
 package org.apache.zeppelin.quantumviz;
 
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -24,6 +23,7 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +32,7 @@ import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.apache.zeppelin.interpreter.InterpreterPropertyBuilder;
@@ -50,6 +51,18 @@ import org.json.JSONObject;
 public class QuantumVizInterpreter extends Interpreter
 {
 
+  private String SETTING_STRING = "custom";
+  private String SETTING_TYPE_GEO = "geo";
+  private String SETTING_TYPE_GRAPH = "graph";
+  private String SETTING_DEFAULT_MAX_HEIGHT = "600px";
+  private String SETTING_DEFAULT_MAX_WIDTH = "800%";
+  
+  private String JSON_TYPE_KEY = "type";
+  private String JSON_MAX_HEIGHT_KEY = "max-height";
+  private String JSON_MAX_WIDTH_KEY = "max-width";
+  private String JSON_DATA_KEY = "data";
+  private String JSON_SERIES_KEY = "series";
+  
   //
   // Private Pair class
   //
@@ -82,57 +95,147 @@ public class QuantumVizInterpreter extends Interpreter
     return propertiesMap;
   }
 
-  @Override
   public void cancel(InterpreterContext arg0) {
     //
 
   }
 
-  @Override
   public void close() {
 
   }
 
-  @Override
   public List<InterpreterCompletion> completion(String arg0, int arg1) {
     //
     return null;
   }
 
-  @Override
   public FormType getFormType() {
     //
     return FormType.SIMPLE;
   }
 
-  //@Override
   public int getProgress(InterpreterContext arg0) {
     //
     return 0;
   }
 
-  //@Override
   //
   // When the result of the WarpScript contains a Map on top of the stack
-  // then all the tuples key,value are saved in Angular variables.
+  // then all the tuples key,value are saved in Zeppelin resource pool.
   // To ensure a Map on top of the stack the WarpScript function EXPORT can be used
   // When using Angular to save variable NaN and Infinity are transformed in String !
   //
   public InterpreterResult interpret(String body, InterpreterContext context) {
 
-    System.out.println(context.getConfig().toString());
     //
     // Store the resource pool already defined in context
     //
 
     ResourcePool resources = context.getResourcePool();
-
+    
+    JSONObject jsObject = null;
+    try {
+      jsObject = new JSONObject(body);
+    } catch (JSONException e) {
+      
+      //throw a Zeppelin exception     
+      return new InterpreterResult(InterpreterResult.Code.ERROR, 
+          "Quantumviz interpreter expects a valid JSON as input");
+    }
+    //String bodyLines[] = body.split("\n");
+    
+    //
+    // Verify that the JSON String has 
+    //
+    
+    if (!jsObject.has(this.JSON_DATA_KEY)) {
+      
+      //throw a Zeppelin exception     
+      return new InterpreterResult(InterpreterResult.Code.ERROR, 
+          "Quantumviz interpreter expects a data key containing GeoTimeSeries. "
+          + "Data can be a single JSON object or a list thereof.");
+    }
+    
+    //
+    // Set default attributes for each elements to visualize
+    //
+    
+    String type = this.SETTING_TYPE_GRAPH;
+    String maxHeight = this.SETTING_DEFAULT_MAX_HEIGHT;
+    String maxWidth = this.SETTING_DEFAULT_MAX_WIDTH;
+    
+    //
+    // Check if type element (graph or geo) is specified by the user.
+    //
+    
+    if (jsObject.has(this.JSON_TYPE_KEY)) {
+      
+      //
+      // Verify type input string before setting it up
+      //
+      
+      if (jsObject.getString(this.JSON_TYPE_KEY).equals(this.SETTING_TYPE_GRAPH) 
+          || jsObject.getString(this.JSON_TYPE_KEY).equals(this.SETTING_TYPE_GEO)) {
+        type = jsObject.getString(this.JSON_TYPE_KEY);
+      } else {
+        
+        //throw a Zeppelin exception     
+        return new InterpreterResult(InterpreterResult.Code.ERROR, 
+            "Quantumviz interpreter expects custom setting type to be "
+            + "one of the following one [" 
+            + this.SETTING_TYPE_GRAPH + ", " + this.SETTING_TYPE_GEO + "].");
+      }
+    }
+    
+    //
+    // Check if div max height is set by the user
+    //
+    if (jsObject.has(this.JSON_MAX_HEIGHT_KEY)) {
+      
+      //
+      // Verify height string before setting it up
+      //
+      
+      if (isHeightOk(jsObject.getString(this.JSON_MAX_HEIGHT_KEY))) {
+        maxHeight = jsObject.getString(this.JSON_MAX_HEIGHT_KEY);
+      } else {
+        
+        //throw a Zeppelin exception
+        return new InterpreterResult(InterpreterResult.Code.ERROR, 
+            "Quantumviz interpreter expects custom setting height to be "
+            + "a number followed by the string px.");
+      }
+    }
+    
+    //
+    // Check if div max width is set by the user
+    //
+    if (jsObject.has(this.JSON_MAX_WIDTH_KEY)) {
+      
+      //
+      // Verify width string before setting it up
+      //
+      
+      if (isWidthOk(jsObject.getString(this.JSON_MAX_WIDTH_KEY))) {
+        maxWidth = jsObject.getString(this.JSON_MAX_WIDTH_KEY);
+      } else {
+        
+        //throw a Zeppelin exception
+        return new InterpreterResult(InterpreterResult.Code.ERROR, 
+            "Quantumviz interpreter expects custom setting height to be "
+            + "a number followed by the string px.");
+      }
+    }
+    
+    //
+    // Build Zeppelin output by importing polymer component from local url
+    //
+    
     StringBuilder res = new StringBuilder();
     res.append("\"\"\"%html ");
     res.append("<script> "
         + "if (!jsCode) {"
         + "var jsCode = document.createElement('script');"
-        // 'https://warp.cityzendata.net/quantumviz/latest/webcomponentsjs/webcomponents-lite.js'
         + "jsCode.setAttribute('src', '" + current_Url 
         + "/webcomponentsjs/webcomponents-lite.js'); "
         + "document.body.appendChild(jsCode); "
@@ -140,43 +243,187 @@ public class QuantumVizInterpreter extends Interpreter
         + "</script> ");
     res.append("<link   rel=\"import\" href=\"" + current_Url 
       + "/polymer/polymer.html\"> ");
-    res.append("<link   rel=\"import\" href=\"" + current_Url 
-      + "/warp10-quantumviz/warp10-display-alt-chart.html\"> ");
-    String bodyLines[] = body.split("\n");
-    //String areWords = "";
-
-    //res.append(bodyLines.length);
     
-    for (String line : bodyLines) {
-      
-      res.append("<div>");
-      res.append("<warp10-display-chart style=\"height:600px\" width=\"800\"");
-      
-      String[] words = line.split("\\s+");
-      
-      StringBuilder currentGraphs = new StringBuilder();
-      for (String word : words) {
-        Resource resource = resources.get(word);
+    //
+    // In case it's a graph or a geo map, use appropriate component
+    //
 
-        //areWords += word + " ";
-        if (resource != null) {
-          Object value = resources.get(word).get();
-          currentGraphs.append(parseObjectToString(value));
-        }
+    String display = "";
+    if (type.equals(this.SETTING_TYPE_GRAPH)) {
+      res.append("<link   rel=\"import\" href=\"" + current_Url 
+        + "/warp10-quantumviz/warp10-display-alt-chart.html\"> ");
+      display = "warp10-display-chart";
+    } else if (type.equals(this.SETTING_TYPE_GEO)) {
+      res.append("<link   rel=\"import\" href=\"" + current_Url 
+          + "/warp10-quantumviz/warp10-display-map.html\">");
+      display = "warp10-display-map";
+    }
+    
+    //
+    // Check if data types match a single object or a list thereof
+    //
+    
+    JSONArray bodyElements = new JSONArray();
+    if (jsObject.get(this.JSON_DATA_KEY) instanceof JSONArray) {
+      bodyElements = jsObject.getJSONArray(this.JSON_DATA_KEY);
+    } else if (jsObject.get(this.JSON_DATA_KEY) instanceof JSONObject) {
+      bodyElements.put(jsObject.get(this.JSON_DATA_KEY));
+    } else {
+      
+    //throw a Zeppelin exception
+      return new InterpreterResult(InterpreterResult.Code.ERROR, 
+          "Quantumviz interpreter encouters an incorrect data type: "
+          + "expects a single JSON object or list thereof.");
+    }
+
+    //
+    // Append a result string for each different graph/geo map the user add
+    //
+    
+    for (Object dataObject : bodyElements) {
+      
+      //
+      // Verify it the current element is valid
+      //
+      
+      if (!(dataObject instanceof JSONObject)) {
+      //throw a Zeppelin exception
+        return new InterpreterResult(InterpreterResult.Code.ERROR, 
+            "Quantumviz interpreter encouters an incorrect data type: "
+            + "each element must be a valid JSON object.");
+      }
+      JSONObject jsonElement = (JSONObject) dataObject;
+      
+      //
+      // Check if there is a series key
+      //
+      
+      if (!jsonElement.has(this.JSON_SERIES_KEY)) {
+        
+        //throw a Zeppelin exception
+        return new InterpreterResult(InterpreterResult.Code.ERROR, 
+            "Quantumviz interpreter encouters an incorrect data type: "
+            + "each element needs a series key.");
       }
       
+      //
+      // Check if there is a series key
+      //
+      
+      if (!(jsonElement.get(this.JSON_SERIES_KEY) instanceof String )) {
+        
+        //throw a Zeppelin exception
+        return new InterpreterResult(InterpreterResult.Code.ERROR, 
+            "Quantumviz interpreter encouters an incorrect series type: "
+            + "series corresponds to a key string to load an element from "
+            + "Zeppelin resource pool.");
+      }
+      
+      String seriesKey = jsonElement.getString(this.JSON_SERIES_KEY);
+      
+      //
+      // Create visualization div
+      //
+      
+      res.append("<div>");
+      
+      //
+      // Set up its style (height and width)
+      //
+      
+      res.append("<" + display + " style=\"height:" + maxHeight + ";"
+          + "max-width:" + maxWidth + ";\"");
+      
+      //
+      // Load resources from Zeppelin if founded
+      //
+      StringBuilder currentGraphs = new StringBuilder();
+      Resource resource = resources.get(seriesKey);
+      if (resource != null) {
+        Object value = resources.get(seriesKey).get();
+        currentGraphs.append(parseObjectToString(value));
+      } else {
+        
+        //throw a Zeppelin exception
+        return new InterpreterResult(InterpreterResult.Code.ERROR, 
+            "Quantumviz interpreter encouters an incorrect series type: "
+            + "series not found in Zeppelin resource pool.");
+      }
+      
+      //
+      // Append data string and then close web component
+      // 
       
       res.append("data='" + currentGraphs.toString() + "'");
-      
-      res.append(" </warp10-quantumviz> <p> </p>");
-
+      res.append(" </" + display + "> <p> </p>");
       res.append("</div>");
-      System.out.println(res.toString());
+      //System.out.println(res.toString());
     }
+    
     //res.append("\"\"\"");
 
     return new InterpreterResult(InterpreterResult.Code.SUCCESS, res.toString());
 
+  }
+
+  /**
+   * Verify that a string is adapted for the polymer width setting
+   * @param width string to test
+   * @return true iif valid (numbers + (px || %)
+   */
+  private boolean isWidthOk(String width) {
+    
+    String numbers = "error";
+    
+    //
+    // Separate case where string end with % or px
+    //
+    
+    if (width.endsWith("%")) {
+      numbers = width.substring(0, width.length() - 2);
+    } else if (width.endsWith("px")) {
+      numbers = width.substring(0, width.length() - 3);
+    }
+    
+    //
+    // If string still equals error or isn't numbers return false
+    //
+    
+    if (numbers.equals("error")) {
+      return false;
+    } else {
+      if (!NumberUtils.isNumber(numbers)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Verify that a string is adapted for the polymer height setting
+   * @param height string to test
+   * @return true iif valid (numbers + px)
+   */
+  private boolean isHeightOk(String height) {
+    
+    //
+    // Check if end of the string is px
+    //
+    
+    if (!height.endsWith("px")) {
+      return false;
+    }
+    
+    //
+    // Then verify that the first part of the string is numbers
+    //
+    
+    String numbers = height.substring(0, height.length() - 3);
+    if (!NumberUtils.isNumber(numbers)) {
+      return false;
+    }
+    
+    return true;
   }
 
   private String parseObjectToString(Object object) {
