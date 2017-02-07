@@ -33,6 +33,7 @@ import java.util.Set;
 import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.apache.zeppelin.interpreter.InterpreterPropertyBuilder;
@@ -64,6 +65,13 @@ public class QuantumVizInterpreter extends Interpreter
   private String JSON_WIDTH_KEY = "width";
   private String JSON_DATA_KEY = "data";
   private String JSON_SERIES_KEY = "series";
+  private String JSON_INTEPOLATE_KEY = "interpolate";
+  private String JSON_TIMESTAMP_KEY = "timestamps";
+  private String JSON_XLABEL_KEY = "xLabel";
+  private String JSON_YLABEL_KEY = "yLabel";
+  private String JSON_GLOBALPARAMS_KEY = "globalParams";
+  
+  private List<String> listQuantumInterpolate = Arrays.asList("linear", "cardinal", "step-before");
   
   //
   // Private Pair class
@@ -140,7 +148,7 @@ public class QuantumVizInterpreter extends Interpreter
       jsObject = new JSONObject(body);
     } catch (JSONException e) {
       
-      //throw a Zeppelin exception     
+      // return a Zeppelin error    
       return new InterpreterResult(InterpreterResult.Code.ERROR, 
           "Quantumviz interpreter expects a valid JSON as input");
     }
@@ -152,7 +160,7 @@ public class QuantumVizInterpreter extends Interpreter
     
     if (!jsObject.has(this.JSON_DATA_KEY)) {
       
-      //throw a Zeppelin exception     
+      // return a Zeppelin error    
       return new InterpreterResult(InterpreterResult.Code.ERROR, 
           "Quantumviz interpreter expects a data key containing GeoTimeSeries. "
           + "Data can be a single JSON object or a list thereof.");
@@ -181,7 +189,7 @@ public class QuantumVizInterpreter extends Interpreter
         type = jsObject.getString(this.JSON_TYPE_KEY);
       } else {
         
-        //throw a Zeppelin exception     
+        // return a Zeppelin error     
         return new InterpreterResult(InterpreterResult.Code.ERROR, 
             "Quantumviz interpreter expects custom setting type to be "
             + "one of the following one [" 
@@ -197,7 +205,7 @@ public class QuantumVizInterpreter extends Interpreter
           jsObject, this.JSON_MAX_HEIGHT_KEY);
     } catch (Exception eWidth){
       
-      //return a Zeppelin error
+      // return a Zeppelin error
       return new InterpreterResult(InterpreterResult.Code.ERROR, eWidth.getMessage());
     }
     
@@ -209,7 +217,7 @@ public class QuantumVizInterpreter extends Interpreter
           jsObject, this.JSON_MAX_WIDTH_KEY);
     } catch (Exception eWidth){
       
-      //return a Zeppelin error
+      // return a Zeppelin error
       return new InterpreterResult(InterpreterResult.Code.ERROR, eWidth.getMessage());
     }
     
@@ -256,7 +264,7 @@ public class QuantumVizInterpreter extends Interpreter
       bodyElements.put(jsObject.get(this.JSON_DATA_KEY));
     } else {
       
-    //throw a Zeppelin exception
+      // return a Zeppelin error
       return new InterpreterResult(InterpreterResult.Code.ERROR, 
           "Quantumviz interpreter encouters an incorrect data type: "
           + "expects a single JSON object or list thereof.");
@@ -273,7 +281,8 @@ public class QuantumVizInterpreter extends Interpreter
       //
       
       if (!(dataObject instanceof JSONObject)) {
-      //throw a Zeppelin exception
+       
+        // return a Zeppelin error
         return new InterpreterResult(InterpreterResult.Code.ERROR, 
             "Quantumviz interpreter encouters an incorrect data type: "
             + "each element must be a valid JSON object.");
@@ -286,7 +295,7 @@ public class QuantumVizInterpreter extends Interpreter
       
       if (!jsonElement.has(this.JSON_SERIES_KEY)) {
         
-        //throw a Zeppelin exception
+        // return a Zeppelin error
         return new InterpreterResult(InterpreterResult.Code.ERROR, 
             "Quantumviz interpreter encouters an incorrect data type: "
             + "each element needs a series key.");
@@ -298,7 +307,7 @@ public class QuantumVizInterpreter extends Interpreter
       
       if (!(jsonElement.get(this.JSON_SERIES_KEY) instanceof String )) {
         
-        //throw a Zeppelin exception
+        // return a Zeppelin error
         return new InterpreterResult(InterpreterResult.Code.ERROR, 
             "Quantumviz interpreter encouters an incorrect series type: "
             + "series corresponds to a key string to load an element from "
@@ -322,7 +331,7 @@ public class QuantumVizInterpreter extends Interpreter
         height = initializeWidthHeight(maxHeight, jsonElement, this.JSON_HEIGHT_KEY);
       } catch (Exception eWidth){
         
-        //return a Zeppelin error
+        // return a Zeppelin error
         return new InterpreterResult(InterpreterResult.Code.ERROR, eWidth.getMessage());
       }
       
@@ -335,7 +344,7 @@ public class QuantumVizInterpreter extends Interpreter
         width = initializeWidthHeight(maxWidth, jsonElement, this.JSON_WIDTH_KEY);
       } catch (Exception eWidth){
         
-        //return a Zeppelin error
+        // return a Zeppelin error
         return new InterpreterResult(InterpreterResult.Code.ERROR, eWidth.getMessage());
       }
       
@@ -349,24 +358,38 @@ public class QuantumVizInterpreter extends Interpreter
       //
       // Load resources from Zeppelin if founded
       //
-      StringBuilder currentGraphs = new StringBuilder();
+      
       Resource resource = resources.get(seriesKey);
+      String valueString = "";
       if (resource != null) {
         Object value = resources.get(seriesKey).get();
-        currentGraphs.append(parseObjectToString(value));
+        valueString = parseObjectToString(value);
+        
+        //
+        // Manage globalParams key with user value
+        //
+        
+        try {
+          valueString = manageGlobalParameter(parseObjectToString(value), jsonElement);  
+        } catch (Exception eValue){
+          
+          // return a Zeppelin error
+          return new InterpreterResult(InterpreterResult.Code.ERROR, eValue.getMessage());
+        }
       } else {
         
-        //throw a Zeppelin exception
+        // return a Zeppelin error
         return new InterpreterResult(InterpreterResult.Code.ERROR, 
             "Quantumviz interpreter encouters an incorrect series type: "
             + "series not found in Zeppelin resource pool.");
       }
       
+      
       //
       // Append data string and then close web component
       // 
       
-      res.append("data='" + currentGraphs.toString() + "'");
+      res.append("data='" + valueString + "'");
       res.append(" </" + display + "> <p> </p>");
       res.append("</div>");
       //System.out.println(res.toString());
@@ -376,6 +399,160 @@ public class QuantumVizInterpreter extends Interpreter
 
     return new InterpreterResult(InterpreterResult.Code.SUCCESS, res.toString());
 
+  }
+
+  private String manageGlobalParameter(String resource, 
+      JSONObject jsonElement) throws JSONException, Exception {
+    
+    String result = resource;
+    
+    //
+    // Check if JsonElement given as parameter contains one of the global param key
+    //
+    
+    if (!(jsonElement.has(this.JSON_INTEPOLATE_KEY) || jsonElement.has(this.JSON_TIMESTAMP_KEY) 
+        || jsonElement.has(this.JSON_XLABEL_KEY) || jsonElement.has(this.JSON_YLABEL_KEY))) {
+      return result;
+    }
+    
+    //
+    // Check if it corresponds to an array
+    //
+    
+    if (resource.startsWith("[")) {
+      JSONArray resourceAsArray = new JSONArray(resource);   
+      JSONArray secondaryArray = new JSONArray();
+      
+      //
+      // Check if first elem of resourceArray contains a global param
+      //
+      if (resourceAsArray.getJSONObject(0).has(JSON_GLOBALPARAMS_KEY)) {
+      
+        for (Object object : resourceAsArray) {
+          if (object instanceof JSONObject) {
+            JSONObject resourceAsJson = (JSONObject) object;  
+            
+            //
+            // Get global params if it exists then set it
+            //
+            
+            if (resourceAsJson.has(JSON_GLOBALPARAMS_KEY)) {
+              JSONObject globalParams = modifyGlobalParams(resourceAsJson.
+                  getJSONObject(JSON_GLOBALPARAMS_KEY), jsonElement);
+              resourceAsJson.put(JSON_GLOBALPARAMS_KEY, globalParams);
+            }
+            secondaryArray.put(resourceAsJson);
+          } else {
+            secondaryArray.put(object);
+          }
+        }
+        result = secondaryArray.toString();
+      }
+     
+    //
+    // Check if it's an object
+    //
+    } else if (resource.startsWith("{")) {
+      JSONObject resourceAsJson = new JSONObject(resource);  
+      if (resourceAsJson.has(JSON_GLOBALPARAMS_KEY)) {
+        JSONObject globalParams = modifyGlobalParams(
+            resourceAsJson.getJSONObject(JSON_GLOBALPARAMS_KEY), jsonElement);
+        resourceAsJson.put(JSON_GLOBALPARAMS_KEY, globalParams);
+        result = resourceAsJson.toString();
+      }
+    }
+    
+    return result;
+  }
+
+  private JSONObject modifyGlobalParams(JSONObject globalParams, 
+      JSONObject jsonElement) throws Exception {
+   
+    //
+    // Case interpolate
+    //
+    
+    if (jsonElement.has(this.JSON_INTEPOLATE_KEY)) {
+      Object interpolateObj = jsonElement.get(this.JSON_INTEPOLATE_KEY);
+      
+      if (interpolateObj instanceof String) {
+        String interpolate = (String) interpolateObj;      
+        
+        //
+        // Verify string entered as interpolate is valid
+        //
+        
+        if (this.listQuantumInterpolate.contains(interpolate)) {
+          globalParams.put(this.JSON_INTEPOLATE_KEY, interpolate);
+        } else {
+          throw new Exception ("Quantumviz interpreter expects interpolate value to be one of "
+              + this.listQuantumInterpolate.toString());
+        }
+      } else {
+        throw new Exception ("Quantumviz interpreter expects interpolate value to be a string");
+      }
+    }
+    
+    //
+    // Case timestamp
+    //
+    
+    if (jsonElement.has(this.JSON_TIMESTAMP_KEY)) {
+      Object timestampObj = jsonElement.get(this.JSON_TIMESTAMP_KEY);
+      
+      //
+      // Verify that timestamp value set is a boolean then push it 
+      //
+      
+      if (timestampObj instanceof Boolean) {
+        globalParams.put(this.JSON_TIMESTAMP_KEY, (Boolean) timestampObj);
+      } else if (timestampObj instanceof String) {
+        if (null != BooleanUtils.toBooleanObject(((String) timestampObj))) {
+          globalParams.put(this.JSON_TIMESTAMP_KEY, 
+              BooleanUtils.toBooleanObject(((String) timestampObj)));
+        } else {
+          throw new Exception ("Quantumviz interpreter expects timestamp value to be a boolean");
+        }
+      } else {
+        throw new Exception ("Quantumviz interpreter expects timestamp value to be a boolean");
+      }
+    }
+
+    //
+    // Case xLabel
+    //
+    
+    if (jsonElement.has(this.JSON_XLABEL_KEY)) {
+      
+      //
+      // Verify that xLabel value entered is a string
+      //
+      
+      Object xLabel = jsonElement.get(this.JSON_XLABEL_KEY);
+      
+      if (xLabel instanceof String) {
+        globalParams.put(this.JSON_XLABEL_KEY, (String) xLabel);
+      }
+    }
+
+    //
+    // Case yLabel
+    //
+    
+    if (jsonElement.has(JSON_YLABEL_KEY)) {
+      
+      //
+      // Verify that yLabel value entered is a string
+      //
+      
+      Object yLabel = jsonElement.get(this.JSON_YLABEL_KEY);
+      
+      if (yLabel instanceof String) {
+        globalParams.put(this.JSON_YLABEL_KEY, (String) yLabel);
+      }
+    }
+    
+    return globalParams;
   }
 
   /**
