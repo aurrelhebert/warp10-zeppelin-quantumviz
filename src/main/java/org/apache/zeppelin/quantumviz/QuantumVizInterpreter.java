@@ -56,7 +56,7 @@ public class QuantumVizInterpreter extends Interpreter
   private String SETTING_TYPE_GEO = "geo";
   private String SETTING_TYPE_GRAPH = "graph";
   private String SETTING_DEFAULT_MAX_HEIGHT = "600px";
-  private String SETTING_DEFAULT_MAX_WIDTH = "800%";
+  private String SETTING_DEFAULT_MAX_WIDTH = "95%";
   
   private String JSON_TYPE_KEY = "type";
   private String JSON_MAX_HEIGHT_KEY = "default-height";

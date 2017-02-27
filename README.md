@@ -1,14 +1,36 @@
 ## Interpreter QuantumViz
 
-** Quantumviz interpreter is migrating, this documentation is no longer relevant for the master version. Use 0.6.1 branches for stable version. **
+** Quantumviz has migrated, this documentation corresponds now to a new QuantumViz release (1.6.1). Use 0.6.1 branches for older version.**
 
-## New Syntax of QuantumViz interpreter
+## Requirement
+Quantumviz version 1.6.1 must be deployed somewhere (for example directly inside zeppelin-web). 
+To work with QuantumViz interpreter, data to plot have to be stored previously in the global resource scope, using an interpreter.
+The format can be an object in [QuantumViz](https://github.com/cityzendata/warp10-quantumviz/blob/master/examples/example-warp10-display-chart-syntax.html) format, a GTS series, or a GTS list.
 
+## Syntax of QuantumViz interpreter
+
+The input string for the QuantumViz interpreter is now a ** JSON String**. 
+
+There is four different fields : *data*, *default-width*, *default-height* and *type*.
+
+The type key can be or *graph* to plot the series as a graph or *geo* as a geographical map. By default a graph is plotted.
+The keys default-width are default-height used to set the default width and height for each graphs. Those keys are optionnals, and are set by default to 600px for the height and 95 % for the width.
+The key data is use to load the specific data to visualize. This key is required.
+
+The data object can have different fields :
+	-	*series* (required) corresponds to the object to load in Zeppelin pool. It can be object directly in QuantumViz format, GTS series, or a GTS list.
+    - 	*width* (optional) the width or the current graph.
+    -   *interpolate* (optional) change the interpolation of the graph. By default, it is QuantumViz value : interpolate.
+    -   *timestamps* (optional) the time display (timestamps or date). By default, it is QuantumViz value : false.
+    -   *xLabel* (optional) used to name the x axis. By default, there is no name.    
+    -   *yLabel* (optional) used to name the y axis. By default, there is no name.
+
+Example of the syntax of the QuantumViz interpreter for Zeppelin
 ```
 {
     "data" : 
         [ 
-            { "series" : "map", "width" : "600px", "interpolate" : "step-before", xLabel : "x", yLabel : "y", timestamp : false },
+            { "series" : "map", "width" : "600px", "interpolate" : "step-before", xLabel : "x", yLabel : "y", timestamps : true },
             { "series" : "map", "width" : "600px" },
             { "series" : "singleGTS", "width" : "600px", "interpolate" : "step-before", xLabel : "x" }
         ],
@@ -18,67 +40,16 @@
 }
 ```
 
+## Configuration
+
 This plugin can be used to plot [quantumviz](https://github.com/cityzendata/warp10-quantumviz) graphs in [apache zeppelin](https://zeppelin.apache.org/). It uses the library defined in quantum url given as parameter.
 
-To get started configure the QuantumViz interpreter, adding the path to Quantumviz if local or an url to get quantumviz component as parameter.
+To get started configure the QuantumViz interpreter, adding the path to Quantumviz if local or an url to get quantumviz component as parameter. Use the "." value, if QuantumViz is deployed directly inside Zeppelin.
 
 ```
 name:                 value:
 warp10.url           Path/to
 ```
-
-This zeppelin interpreter espect scala object that follow the modelisation choosen quantumviz. 
-
-## Use
-
-Just put the parameter of the scala object to print in the paragraph quantumviz. One variable per line, multiple line will print multiples graphs.
-
-```
-%quantumviz
-dataviz
-data2
-```
-
-To work with quantum, data have to be stored previouslys in the globale resource scope. In WarpScript, they corresponds to the following modelisation. To print the scala object dataviz, a new list containing a map including three parameters (gts,params and globalParams).
-
-```
-{
-    'dataviz'
-    [
-        {
-            'gts'
-            [ 
-                $gts1
-                $gts2
-            ]
-            'params'
-            [
-                { 'key' 'key1' }
-                { 'key' 'key2' 'color' '#ff1010' }
-            ]
-            'globalParams'
-            { 'interpolate' 'linear' }
-        }
-    ]
-}
-```
-
-This method allow the user to define the parameter he wants to use: for example choosing the key of the serie to print, its color. The user can also chose some globals parameters as the interpolation, if wants to print the series with date or timestamps values, or choose the titles of its differents axis.
-
-An other to print a serie is to have a scala object as the variable data2 which is a simple list of time-serie. Then quantumviz will do its best to print them automatically. 
-
-```
-{
-    'data2'
-    [ $gts1 ]
-}
-```
-
-This [page](https://github.com/aurrelhebert/WarpScript-Sample/blob/master/zeppelin/warpscript-quantumviz.json) contains a valid JSON with stored series in WarpScript and the method to print them with Quantumviz.
-
-## Real example
-
-In this [repository](https://github.com/aurrelhebert/WarpScript-Sample/tree/master/zeppelin) you will find how the Fuel data-set was presented using Zeppelin.
 
 ## Set-up 
 
