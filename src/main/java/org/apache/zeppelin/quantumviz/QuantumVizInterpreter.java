@@ -448,31 +448,28 @@ public class QuantumVizInterpreter extends Interpreter
           }
         }
         result = secondaryArray.toString();
-        return result;
       }
       
       //
       // Check if first elem of resourceArray contains a global param
       //
-      if (resourceAsArray.getJSONObject(0).has(JSON_GTS_KEY)) {
+      else if (resourceAsArray.getJSONObject(0).has(JSON_GTS_KEY)) {
         for (Object object : resourceAsArray) {
           JSONObject resourceAsJson = (JSONObject) object;  
-          resourceAsJson.append(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
+          resourceAsJson.put(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
           secondaryArray.put(resourceAsJson);
         }
         result = secondaryArray.toString();
-        return result;
       } else {
 
         //
         // Else then it is a GTS arrayList on the stack
         //
         JSONObject element = new JSONObject();
-        element.append(this.JSON_GTS_KEY, resourceAsArray);
-        element.append(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
-
-        result = element.toString();
-        return result;
+        element.put(this.JSON_GTS_KEY, resourceAsArray);
+        element.put(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
+        secondaryArray.put(element);
+        result = secondaryArray.toString();
       }  
 
       
@@ -483,6 +480,7 @@ public class QuantumVizInterpreter extends Interpreter
     //
       
     } else if (resource.startsWith("{")) {
+      JSONArray arrayResult = new JSONArray();
       JSONObject resourceAsJson = new JSONObject(resource);  
       
       //
@@ -493,17 +491,17 @@ public class QuantumVizInterpreter extends Interpreter
         JSONObject globalParams = modifyGlobalParams(
             resourceAsJson.getJSONObject(JSON_GLOBALPARAMS_KEY), jsonElement);
         resourceAsJson.put(this.JSON_GLOBALPARAMS_KEY, globalParams);
-        result = resourceAsJson.toString();
-        return result;
+        arrayResult.put(resourceAsJson);
+        result = arrayResult.toString();
         
       //
       // If it's an object in quantum format, without Global Params
       //  
         
       } else if (resourceAsJson.has(this.JSON_GTS_KEY)) {
-        resourceAsJson.append(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
-        result = resourceAsJson.toString();
-        return result;
+        resourceAsJson.put(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
+        arrayResult.put(resourceAsJson);
+        result = arrayResult.toString();
       } else {
         
         //
@@ -511,13 +509,13 @@ public class QuantumVizInterpreter extends Interpreter
         //
         
         JSONObject element = new JSONObject();
-        element.append(this.JSON_GTS_KEY, resourceAsJson);
-        element.append(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
-        result = element.toString();
-        return result;
+        element.put(this.JSON_GTS_KEY, resourceAsJson);
+        element.put(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
+        arrayResult.put(element);
+        result = arrayResult.toString();
       }
     }
-    
+
     return result;
   }
 
@@ -525,19 +523,19 @@ public class QuantumVizInterpreter extends Interpreter
     JSONObject jsonObject = new JSONObject();
     
     if (jsonElement.has(this.JSON_INTEPOLATE_KEY)) {
-      jsonObject.append(this.JSON_INTEPOLATE_KEY, jsonElement.get(this.JSON_INTEPOLATE_KEY));
+      jsonObject.put(this.JSON_INTEPOLATE_KEY, jsonElement.get(this.JSON_INTEPOLATE_KEY));
     }
     
     if (jsonElement.has(this.JSON_TIMESTAMP_KEY)) {
-      jsonObject.append(this.JSON_TIMESTAMP_KEY, jsonElement.get(this.JSON_TIMESTAMP_KEY));
+      jsonObject.put(this.JSON_TIMESTAMP_KEY, jsonElement.get(this.JSON_TIMESTAMP_KEY));
     }
     
     if (jsonElement.has(this.JSON_XLABEL_KEY)) {
-      jsonObject.append(this.JSON_XLABEL_KEY, jsonElement.get(this.JSON_XLABEL_KEY));
+      jsonObject.put(this.JSON_XLABEL_KEY, jsonElement.get(this.JSON_XLABEL_KEY));
     }
     
     if (jsonElement.has(this.JSON_YLABEL_KEY)) {
-      jsonObject.append(this.JSON_YLABEL_KEY, jsonElement.get(this.JSON_YLABEL_KEY));
+      jsonObject.put(this.JSON_YLABEL_KEY, jsonElement.get(this.JSON_YLABEL_KEY));
     }
     return jsonObject;
   }
