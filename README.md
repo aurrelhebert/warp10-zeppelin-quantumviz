@@ -1,6 +1,6 @@
 ## Interpreter QuantumViz
 
-**Quantumviz has migrated, this documentation corresponds now to a new QuantumViz release (1.6.1). Use 0.6.1 branches for older version.**
+**Quantumviz has migrated, this documentation corresponds now to a new QuantumViz release (1.6.1). Use 0.6.1 and 0.6.1-2 branches for older version.**
 
 ## Requirement
 Quantumviz version 1.6.1 must be deployed somewhere (for example directly inside zeppelin-web). 
