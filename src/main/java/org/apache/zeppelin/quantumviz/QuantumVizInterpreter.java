@@ -70,6 +70,7 @@ public class QuantumVizInterpreter extends Interpreter
   private String JSON_XLABEL_KEY = "xLabel";
   private String JSON_YLABEL_KEY = "yLabel";
   private String JSON_GLOBALPARAMS_KEY = "globalParams";
+  private String JSON_GTS_KEY = "gts";
   
   private List<String> listQuantumInterpolate = Arrays.asList("linear", "cardinal", "step-before");
   
@@ -447,22 +448,98 @@ public class QuantumVizInterpreter extends Interpreter
           }
         }
         result = secondaryArray.toString();
+        return result;
       }
+      
+      //
+      // Check if first elem of resourceArray contains a global param
+      //
+      if (resourceAsArray.getJSONObject(0).has(JSON_GTS_KEY)) {
+        for (Object object : resourceAsArray) {
+          JSONObject resourceAsJson = (JSONObject) object;  
+          resourceAsJson.append(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
+          secondaryArray.put(resourceAsJson);
+        }
+        result = secondaryArray.toString();
+        return result;
+      } else {
+
+        //
+        // Else then it is a GTS arrayList on the stack
+        //
+        JSONObject element = new JSONObject();
+        element.append(this.JSON_GTS_KEY, resourceAsArray);
+        element.append(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
+
+        result = element.toString();
+        return result;
+      }  
+
+      
+      //element.append(JSON_GTS_KEY, value)
      
     //
     // Check if it's an object
     //
+      
     } else if (resource.startsWith("{")) {
       JSONObject resourceAsJson = new JSONObject(resource);  
-      if (resourceAsJson.has(JSON_GLOBALPARAMS_KEY)) {
+      
+      //
+      // If it's an object in quantum format, update Global params
+      //
+      
+      if (resourceAsJson.has(this.JSON_GLOBALPARAMS_KEY)) {
         JSONObject globalParams = modifyGlobalParams(
             resourceAsJson.getJSONObject(JSON_GLOBALPARAMS_KEY), jsonElement);
-        resourceAsJson.put(JSON_GLOBALPARAMS_KEY, globalParams);
+        resourceAsJson.put(this.JSON_GLOBALPARAMS_KEY, globalParams);
         result = resourceAsJson.toString();
+        return result;
+        
+      //
+      // If it's an object in quantum format, without Global Params
+      //  
+        
+      } else if (resourceAsJson.has(this.JSON_GTS_KEY)) {
+        resourceAsJson.append(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
+        result = resourceAsJson.toString();
+        return result;
+      } else {
+        
+        //
+        // Else then expect a GTS on the stack
+        //
+        
+        JSONObject element = new JSONObject();
+        element.append(this.JSON_GTS_KEY, resourceAsJson);
+        element.append(this.JSON_GLOBALPARAMS_KEY, getGlobalParams(jsonElement));
+        result = element.toString();
+        return result;
       }
     }
     
     return result;
+  }
+
+  private Object getGlobalParams(JSONObject jsonElement) {
+    JSONObject jsonObject = new JSONObject();
+    
+    if (jsonElement.has(this.JSON_INTEPOLATE_KEY)) {
+      jsonObject.append(this.JSON_INTEPOLATE_KEY, jsonElement.get(this.JSON_INTEPOLATE_KEY));
+    }
+    
+    if (jsonElement.has(this.JSON_TIMESTAMP_KEY)) {
+      jsonObject.append(this.JSON_TIMESTAMP_KEY, jsonElement.get(this.JSON_TIMESTAMP_KEY));
+    }
+    
+    if (jsonElement.has(this.JSON_XLABEL_KEY)) {
+      jsonObject.append(this.JSON_XLABEL_KEY, jsonElement.get(this.JSON_XLABEL_KEY));
+    }
+    
+    if (jsonElement.has(this.JSON_YLABEL_KEY)) {
+      jsonObject.append(this.JSON_YLABEL_KEY, jsonElement.get(this.JSON_YLABEL_KEY));
+    }
+    return jsonObject;
   }
 
   private JSONObject modifyGlobalParams(JSONObject globalParams, 
