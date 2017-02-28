@@ -1,6 +1,6 @@
 ## Interpreter QuantumViz
 
-** Quantumviz has migrated, this documentation corresponds now to a new QuantumViz release (1.6.1). Use 0.6.1 branches for older version.**
+**Quantumviz has migrated, this documentation corresponds now to a new QuantumViz release (1.6.1). Use 0.6.1 and 0.6.1-2 branches for older version.**
 
 ## Requirement
 
@@ -49,21 +49,19 @@ z.put("scalaGTS", json)
 
 ## Syntax of QuantumViz interpreter
 
-The input string for the QuantumViz interpreter is now a ** JSON String**. 
+The input string for the QuantumViz interpreter is now a **JSON String**. 
 
 There is four different fields : *data*, *default-width*, *default-height* and *type*.
 
-The type key can be or *graph* to plot the series as a graph or *geo* as a geographical map. By default a graph is plotted.
-The keys default-width are default-height used to set the default width and height for each graphs. Those keys are optionnals, and are set by default to 600px for the height and 95 % for the width.
-The key data is use to load the specific data to visualize. This key is required.
-
-The data object can have different fields :
-	-	*series* (required) corresponds to the object to load in Zeppelin pool. It can be object directly in QuantumViz format, GTS series, or a GTS list.
-    - 	*width* (optional) the width or the current graph.
-    -   *interpolate* (optional) change the interpolation of the graph. By default, it is QuantumViz value : interpolate.
-    -   *timestamps* (optional) the time display (timestamps or date). By default, it is QuantumViz value : false.
-    -   *xLabel* (optional) used to name the x axis. By default, there is no name.    
-    -   *yLabel* (optional) used to name the y axis. By default, there is no name.
++ *type* key can be or **graph** to plot the series as a graph or **geo** as a geographical map. By default a graph is plotted.
++ *default-width* and *default-height* keys used to set the default width and height for each graphs. Those keys are optionnals, and are set by default to 600px for the height and 95 % for the width.
++ *data* key is use to load the specific data to visualize. This key is required. The data object can have different fields :
+ - *series* (required) corresponds to the object to load in Zeppelin pool. It can be object directly in QuantumViz format, GTS series, or a GTS list.
+ - *width* (optional) the width or the current graph.
+ - *interpolate* (optional) change the interpolation of the graph. By default, it is QuantumViz value : interpolate.
+ - *timestamps* (optional) the time display (timestamps or date). By default, it is QuantumViz value : false.
+ - *xLabel* (optional) used to name the x axis. By default, there is no name.    
+ - *yLabel* (optional) used to name the y axis. By default, there is no name.
 
 Example of the syntax of the QuantumViz interpreter for Zeppelin
 ```
