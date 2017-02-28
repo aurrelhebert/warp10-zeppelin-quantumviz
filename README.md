@@ -10,7 +10,7 @@ The format can be an object in [QuantumViz](https://github.com/cityzendata/warp1
 
 ## GTS format in Scala
 
-Here you will find an example on Scala of a valid serie, than can be plot using QuantumViz
+Here you will find an example in Scala of a valid series, than can be plot using QuantumViz
 
 ```
 import com.google.gson.Gson
@@ -26,7 +26,7 @@ class GTS(var c: String, var l: java.util.Map[String, String], var a : java.util
 }
 
 //
-// Instanciate series labels, attributes and values
+// Initialization of the series labels, attributes and values
 //
 
 val labels = new Gson().fromJson("{ 'l0' : 'a' }", classOf[java.util.Map[String, String]]);
@@ -34,7 +34,7 @@ var attributes = new Gson().fromJson("{}", classOf[java.util.Map[String, String]
 var values =  new Gson().fromJson("[[1, 0], [1000, 1], [2000, 2], [10000, 10], [20000, 20]]", classOf[java.util.List[Object]]);
 
 //
-// Instanciate the series, and create it's associates JSON object
+// Instantiate the series, and create it's associated JSON object
 //
 
 val scalaGTS = new GTS("name", labels , attributes, values)
