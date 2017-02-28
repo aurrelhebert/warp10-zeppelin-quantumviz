@@ -3,9 +3,49 @@
 ** Quantumviz has migrated, this documentation corresponds now to a new QuantumViz release (1.6.1). Use 0.6.1 branches for older version.**
 
 ## Requirement
+
 Quantumviz version 1.6.1 must be deployed somewhere (for example directly inside zeppelin-web). 
 To work with QuantumViz interpreter, data to plot have to be stored previously in the global resource scope, using an interpreter.
 The format can be an object in [QuantumViz](https://github.com/cityzendata/warp10-quantumviz/blob/master/examples/example-warp10-display-chart-syntax.html) format, a GTS series, or a GTS list.
+
+## GTS format in Scala
+
+Here you will find an example on Scala of a valid serie, than can be plot using QuantumViz
+
+```
+import com.google.gson.Gson
+
+//
+// GTS implementation in Scala
+//
+
+class GTS(var c: String, var l: java.util.Map[String, String], var a : java.util.Map[String, String], var v : java.util.List[Object]) {
+
+  override def toString: String =
+    "{" + "a=" + a + ", c=" + c + ", v=" + v + ", l=" + l + "}"
+}
+
+//
+// Instanciate series labels, attributes and values
+//
+
+val labels = new Gson().fromJson("{ 'l0' : 'a' }", classOf[java.util.Map[String, String]]);
+var attributes = new Gson().fromJson("{}", classOf[java.util.Map[String, String]]);
+var values =  new Gson().fromJson("[[1, 0], [1000, 1], [2000, 2], [10000, 10], [20000, 20]]", classOf[java.util.List[Object]]);
+
+//
+// Instanciate the series, and create it's associates JSON object
+//
+
+val scalaGTS = new GTS("name", labels , attributes, values)
+val json = new Gson().toJson(scalaGTS)
+
+//
+// Put series in Zeppelin resource pool
+//
+
+z.put("scalaGTS", json)
+```
 
 ## Syntax of QuantumViz interpreter
 
@@ -27,12 +67,12 @@ The data object can have different fields :
 
 Example of the syntax of the QuantumViz interpreter for Zeppelin
 ```
+%quantumviz
 {
     "data" : 
         [ 
-            { "series" : "map", "width" : "600px", "interpolate" : "step-before", xLabel : "x", yLabel : "y", timestamps : true },
-            { "series" : "map", "width" : "600px" },
-            { "series" : "singleGTS", "width" : "600px", "interpolate" : "step-before", xLabel : "x" }
+            { "series" : "scalaGTS", "width" : "600px", "interpolate" : "step-before", xLabel : "x", yLabel : "y", timestamps : true },
+            { "series" : "scalaGTS", "width" : "600px" }
         ],
     "default-width" : "80%",
     "default-height" : "300px",
