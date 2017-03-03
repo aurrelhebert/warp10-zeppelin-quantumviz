@@ -5,12 +5,12 @@
   <parent>
     <groupId>org.apache.zeppelin</groupId>
     <artifactId>zeppelin</artifactId>
-    <version>0.6.1</version>
+    <version>0.7.0</version>
   </parent>
   
   <groupId>org.apache.zeppelin</groupId>
   <artifactId>zeppelin-quantumviz</artifactId>
-  <version>0.6.1</version>
+  <version>0.7.1</version>
   <name>zeppelin-quantumviz</name>
   <url>http://maven.apache.org</url>
   <properties>
@@ -21,9 +21,15 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>zeppelin-interpreter</artifactId>
-      <version>0.6.1</version>
+      <version>0.7.0</version>
       <scope>provided</scope>
-    </dependency> 
+    </dependency>
+    
+    <dependency>
+    	<groupId>org.apache.commons</groupId>
+    	<artifactId>commons-lang3</artifactId>
+    	<version>3.4</version>
+	</dependency> 
 
     <dependency>
       <groupId>org.slf4j</groupId>

@@ -38,6 +38,7 @@ import org.apache.zeppelin.interpreter.Interpreter;
 import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.apache.zeppelin.interpreter.InterpreterPropertyBuilder;
 import org.apache.zeppelin.interpreter.InterpreterResult;
+import org.apache.zeppelin.interpreter.InterpreterResult.Type;
 import org.apache.zeppelin.interpreter.thrift.InterpreterCompletion;
 import org.apache.zeppelin.resource.Resource;
 import org.apache.zeppelin.resource.ResourcePool;
@@ -227,7 +228,7 @@ public class QuantumVizInterpreter extends Interpreter
     //
     
     StringBuilder res = new StringBuilder();
-    res.append("\"\"\"%html ");
+    //res.append("\"\"%html ");
     res.append("<script> "
         + "if (!jsCode) {"
         + "var jsCode = document.createElement('script');"
@@ -282,7 +283,6 @@ public class QuantumVizInterpreter extends Interpreter
       //
       
       if (!(dataObject instanceof JSONObject)) {
-       
         // return a Zeppelin error
         return new InterpreterResult(InterpreterResult.Code.ERROR, 
             "Quantumviz interpreter encouters an incorrect data type: "
@@ -396,9 +396,10 @@ public class QuantumVizInterpreter extends Interpreter
       //System.out.println(res.toString());
     }
     
-    //res.append("\"\"\"");
+    //res.append("");
 
-    return new InterpreterResult(InterpreterResult.Code.SUCCESS, res.toString());
+    return new InterpreterResult(InterpreterResult.Code.SUCCESS, Type.HTML, res.toString());
+    //return new InterpreterResult(InterpreterResult.Code.SUCCESS, res.toString());
 
   }
 
@@ -836,98 +837,5 @@ public class QuantumVizInterpreter extends Interpreter
     this.current_Url = keyValue;
     
     //Map<>
-  }
-
-  public Pair<InterpreterResult.Code, String> execRequest(String body) throws Exception {
-
-    //
-    // Execute the request on current url defined
-    //
-
-    String url = this.current_Url;
-    url += "/exec";
-    URL obj = new URL(url);
-    HttpURLConnection con = null;
-
-    //
-    // If HTTPS execute an HTTPS connection
-    //
-
-    if (url.startsWith("https")) {
-      con = (HttpsURLConnection) obj.openConnection();
-    } else {
-      con = (HttpURLConnection) obj.openConnection();
-    }
-
-    //add request header
-    con.setDoOutput(true);
-    con.setDoInput(true);
-    con.setRequestMethod("POST");
-    con.setChunkedStreamingMode(16384);
-    con.connect();
-
-    //
-    // Write the body in the request
-    //
-
-    OutputStream os = con.getOutputStream();
-    //GZIPOutputStream out = new GZIPOutputStream(os);
-    PrintWriter pw = new PrintWriter(os);  
-    pw.println(body);
-    pw.close();
-
-    StringBuffer response = new StringBuffer();
-    Pair<InterpreterResult.Code, String> resultPair = null;
-
-    //
-    // If answer equals 200 parse result stream, otherwise error Stream
-    //
-
-    if (200 == con.getResponseCode()) {
-      BufferedReader in = new BufferedReader(
-          new InputStreamReader(con.getInputStream()));
-      String inputLine;
-
-      while ((inputLine = in.readLine()) != null) {
-        response.append(inputLine);
-      }
-      resultPair = new Pair<InterpreterResult.Code, String>(InterpreterResult.Code.SUCCESS, 
-          response.toString());
-      in.close();
-      con.disconnect();
-    } else {
-      String errorLine = "\"Error-Line\":" + con.getHeaderField("X-Warp10-Error-Line");
-      String errorMsg = "\"Error-Message\":\"" 
-          + con.getHeaderField("X-Warp10-Error-Message") + "\"";
-      response.append("[{");
-      response.append(errorLine + ",");
-      response.append(errorMsg);
-      boolean getBody = (null == con.getContentType());
-      if (!getBody && !con.getContentType().startsWith("text/html")) {
-        getBody = true;
-      }
-      if (getBody) {
-        response.append(",\"Body\":\"");
-        BufferedReader in = new BufferedReader(
-            new InputStreamReader(con.getErrorStream()));
-        String inputLine;
-
-        while ((inputLine = in.readLine()) != null) {
-          response.append(inputLine);
-        }
-        in.close();
-        response.append("\"");
-      }
-      response.append("}]");
-      resultPair = new Pair<InterpreterResult.Code, String>(InterpreterResult.Code.ERROR, 
-          response.toString());
-      con.disconnect();
-    }
-
-    //
-    // Return the body message with its associated code (SUCESS or ERROR)
-    //
-
-    return resultPair;
   }
 }
